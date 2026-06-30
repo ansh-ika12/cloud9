@@ -97,7 +97,7 @@ The application follows a mentor-style teaching approach, encouraging users to d
 - Supabase Storage
 
 ## Deployment
-- Vercel
+- AWS
 
 ---
 
