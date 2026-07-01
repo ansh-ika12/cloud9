@@ -239,6 +239,6 @@ This project is licensed under the MIT License.
 
 # 👩‍💻 Author
 
-Developed by **Anshika Singh**
+Developed by **Anshika Singh, Tripti Upadhyay and Pragati Srivastava**
 
 Built with ❤️ using Next.js, Gemini AI, LangChain, Pinecone, and Supabase.
