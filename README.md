@@ -2,6 +2,11 @@
 
 An AI-powered coding mentor that helps students **learn programming instead of just receiving answers**.
 
+
+# ☁️ Cloud 9 — AI Coding Mentor
+
+An AI-powered coding mentor that helps students **learn programming instead of just receiving answers**.
+
 Cloud 9 combines **Google Gemini**, **Retrieval-Augmented Generation (RAG)**, and a curated programming knowledge base to provide intelligent debugging, concept explanations, and personalized coding practice.
 
 ---
