@@ -1,3 +1,7 @@
+# ☁️ Cloud 9 — AI Coding Mentor
+
+An AI-powered coding mentor that helps students **learn programming instead of just receiving answers**.
+
 
 # ☁️ Cloud 9 — AI Coding Mentor
 
