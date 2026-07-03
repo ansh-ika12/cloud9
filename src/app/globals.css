@@ -1,26 +1,262 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   AI Coding Mentor — Design Tokens & Memphis "Stop/Start/Continue" System
+   Source: Frontend Requirements Document §3 (Design Tokens), §4 (Mode Map)
+
+   Tailwind v4: tokens are declared in :root for use in plain CSS (box-shadow,
+   clip-path, etc.) AND mirrored into @theme so they're also available as
+   Tailwind utilities — bg-danger, text-ink-muted, border-ink, etc.
+   ========================================================================== */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* --- Palette ------------------------------------------------------- */
+  --bg-pink: #f4c9d6;
+  --bg-blue: #c9d6f4;
+  --bg-mint: #c9f0da;
+
+  --accent-pink: var(--bg-pink);
+  --accent-blue: var(--bg-blue);
+  --accent-mint: var(--bg-mint);
+
+  --ink: #0a0a0a;
+  --ink-muted: rgba(10, 10, 10, 0.6);
+  --surface: #ffffff;
+  --surface-alt: #fafafa;
+
+  /* Semantic states — mapped onto the 3-color palette so each hue still
+     carries meaning instead of being purely decorative. */
+  --danger: var(--bg-pink);
+  --warning: var(--bg-blue);
+  --success: var(--bg-mint);
+
+  --font-display: var(--font-rubik-bubbles), cursive;
+  --font-heading: var(--font-space-grotesk), "Arial Black", sans-serif;
+  --font-body: var(--font-inter), Inter, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --card-border: 2px solid var(--ink);
+  --card-radius: 12px;
+  --shadow-offset: 6px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+
+  --color-bg-pink: var(--bg-pink);
+  --color-bg-blue: var(--bg-blue);
+  --color-bg-mint: var(--bg-mint);
+
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+
+  --font-display: var(--font-display);
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--ink);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--surface-alt);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+
+  code,
+  pre,
+  kbd,
+  samp {
+    font-family: var(--font-mono);
+  }
+
+  ::selection {
+    background: var(--bg-blue);
+    color: var(--ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .bg-grid-pastel {
+    background-color: var(--bg-blue);
+    background-image: linear-gradient(
+        to right,
+        rgba(10, 10, 10, 0.08) 1px,
+        transparent 1px
+      ),
+      linear-gradient(to bottom, rgba(10, 10, 10, 0.08) 1px, transparent 1px),
+      linear-gradient(
+        135deg,
+        var(--bg-pink) 0%,
+        var(--bg-blue) 50%,
+        var(--bg-mint) 100%
+      );
+    background-size: 40px 40px, 40px 40px, cover;
+  }
+
+  .card-sticky {
+    position: relative;
+    background: var(--surface);
+    border: var(--card-border);
+    border-radius: var(--card-radius);
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0
+      var(--card-shadow-color, var(--ink));
+  }
+
+  .card-sticky--pink {
+    --card-shadow-color: var(--bg-pink);
+  }
+  .card-sticky--blue {
+    --card-shadow-color: var(--bg-blue);
+  }
+  .card-sticky--mint {
+    --card-shadow-color: var(--bg-mint);
+  }
+  .card-sticky--ink {
+    --card-shadow-color: var(--ink);
+  }
+
+  .window-chrome {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border-bottom: var(--card-border);
+    border-radius: calc(var(--card-radius) - 2px)
+      calc(var(--card-radius) - 2px) 0 0;
+    background: var(--window-tint, var(--surface-alt));
+  }
+
+  .window-chrome__dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink);
+    background: transparent;
+  }
+
+  .sticky-note {
+    position: relative;
+    display: inline-block;
+    background: var(--tag-color, var(--bg-blue));
+    color: var(--ink);
+    padding: 12px 16px;
+    clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 0 100%);
+  }
+
+  .tag-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    padding: 4px 12px;
+    color: var(--ink);
+    background: var(--surface);
+  }
+
+  .dot-divider {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .dot-divider span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink);
+    background: transparent;
+  }
+
+  .step-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: var(--ink);
+    color: var(--surface);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    border: var(--card-border);
+    border-radius: 10px;
+    padding: 12px 28px;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+  }
+
+  .btn-primary {
+    background: var(--ink);
+    color: var(--surface);
+  }
+
+  .btn-primary:hover,
+  .btn-primary:focus-visible {
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0
+      var(--bg-blue);
+    transform: translate(-2px, -2px);
+  }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  .btn-secondary:hover,
+  .btn-secondary:focus-visible {
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--ink);
+    transform: translate(-2px, -2px);
+  }
 }
