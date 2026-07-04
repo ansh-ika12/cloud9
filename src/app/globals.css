@@ -223,6 +223,26 @@
     font-weight: 700;
     font-size: 14px;
   }
+  .loading-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ink);
+    animation: loading-bounce 1s ease-in-out infinite;
+  }
+
+  @keyframes loading-bounce {
+    0%,
+    80%,
+    100% {
+      transform: scale(0.6);
+      opacity: 0.4;
+    }
+    40% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
 
   .btn {
     display: inline-flex;
@@ -260,3 +280,13 @@
     transform: translate(-2px, -2px);
   }
 }
+.btn-danger {
+    background: var(--danger);
+    color: var(--ink);
+  }
+
+  .btn-danger:hover,
+  .btn-danger:focus-visible {
+    box-shadow: var(--shadow-offset) var(--shadow-offset) 0 0 var(--ink);
+    transform: translate(-2px, -2px);
+  }
