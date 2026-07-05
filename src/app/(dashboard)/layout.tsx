@@ -47,15 +47,16 @@ export default async function DashboardLayout({
         {/* Placeholder sidebar — becomes components/layout/Sidebar.tsx with
             real conversation history once api/conversations exists. */}
         <aside className="hidden w-60 flex-col gap-4 border-r-2 border-[var(--ink)] bg-[var(--surface)] p-4 sm:flex">
-        <a href="/chat" className="btn btn-primary w-full text-sm">
+          <a href="/chat" className="btn btn-primary w-full text-sm">
             + New Chat
-          </a>e="text-xs text-[var(--ink-muted)]">
+          </a>
+          <p className="text-xs text-[var(--ink-muted)]">
             Conversation history is coming soon — each chat is separate for
             now.
           </p>
         </aside>
 
-       <main className="flex-1 overflow-y-auto bg-grid-pastel">
+        <main className="flex-1 overflow-y-auto bg-grid-pastel">
           {children}
         </main>
       </div>
