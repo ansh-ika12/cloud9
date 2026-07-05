@@ -1,8 +1,8 @@
 "use client";
 
-export type Mode = "debug" | "explain" | "practice";
+import type { ChatMode } from "@/types";
 
-const MODES: { id: Mode; label: string; activeClass: string }[] = [
+const MODES: { id: ChatMode; label: string; activeClass: string }[] = [
   { id: "debug", label: "Debug", activeClass: "bg-[var(--bg-pink)]" },
   { id: "explain", label: "Explain", activeClass: "bg-[var(--bg-blue)]" },
   { id: "practice", label: "Practice", activeClass: "bg-[var(--bg-mint)]" },
@@ -18,8 +18,8 @@ export default function ModeSelector({
   mode,
   onChange,
 }: {
-  mode: Mode;
-  onChange: (mode: Mode) => void;
+  mode: ChatMode;
+  onChange: (mode: ChatMode) => void;
 }) {
   return (
     <div role="radiogroup" aria-label="Mentor mode" className="flex gap-3">

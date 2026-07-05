@@ -2,14 +2,9 @@
 
 import { createContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
+import type { AuthContextValue } from "@/types";
 import { createClient } from "@/lib/supabase-client";
-
-export type AuthContextValue = {
-  user: User | null;
-  session: Session | null;
-  isLoading: boolean;
-};
 
 /**
  * The context object itself — exported so useAuth.ts (next file in the

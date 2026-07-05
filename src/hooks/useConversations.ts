@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { ChatMode } from "@/components/chat/MessageBubble";
-
-export type ConversationSummary = {
-  id: string;
-  title: string;
-  mode: ChatMode;
-  updatedAt: string;
-};
+import type { ConversationSummary } from "@/types";
 
 // Same shape as Sidebar.tsx's inline mock array, so swapping that
 // component over to this hook later is a clean drop-in rather than a

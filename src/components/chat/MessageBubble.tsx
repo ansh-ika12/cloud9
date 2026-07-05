@@ -1,13 +1,7 @@
+import type { ChatMessage, ChatMode } from "@/types";
 import FeedbackButtons from "@/components/chat/FeedbackButtons";
 
-export type ChatMode = "debug" | "explain" | "practice";
-
-export type ChatMessage = {
-  id: string;
-  role: "user" | "mentor";
-  content: string;
-  mode?: ChatMode; // only set on mentor messages, for the window-chrome tint
-};
+export type { ChatMessage, ChatMode };
 
 const MODE_CARD_CLASS: Record<ChatMode, string> = {
   debug: "card-sticky--pink",
