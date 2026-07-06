@@ -22,15 +22,13 @@ export default function ChatPage() {
   const [mode, setMode] = useState<ModeId>("debug");
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
 
   const isOverLimit = input.length > CHAR_LIMIT;
   const canSubmit = input.trim().length >= 10 && !isOverLimit;
   const activeModeCardClass = MODES.find((m) => m.id === mode)?.cardClass;
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!canSubmit || isLoading) return;
+  function sendMessage() {
+    if (!canSubmit) return;
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -38,41 +36,30 @@ export default function ChatPage() {
       content: input,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    // Placeholder reply — src/app/api/mentor/* isn't built yet, so this
+    // just proves the chat UI works end-to-end until that's wired up.
+    const mentorMessage: Message = {
+      id: crypto.randomUUID(),
+      role: "mentor",
+      content:
+        "The mentor API isn't connected yet — this is a placeholder response so you can see the chat flow working.",
+    };
+
+    setMessages((prev) => [...prev, userMessage, mentorMessage]);
     setInput("");
-    setIsLoading(true);
+  }
 
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, message: userMessage.content }),
-      });
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    sendMessage();
+  }
 
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        throw new Error(errData?.error || "Request failed");
-      }
-
-      const data = await res.json();
-
-      const mentorMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "mentor",
-        content: data.response,
-      };
-
-      setMessages((prev) => [...prev, mentorMessage]);
-    } catch (err) {
-      const errorMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "mentor",
-        content:
-          "Sorry, something went wrong reaching the mentor. Please try again.",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsLoading(false);
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    // Enter sends; Shift+Enter inserts a newline (native textarea
+    // behavior) instead of submitting.
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
     }
   }
 
@@ -133,6 +120,7 @@ export default function ChatPage() {
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
           rows={4}
           placeholder="Paste code that's breaking, or ask a question..."
           className="w-full rounded-lg border-2 border-[var(--ink)] bg-[var(--surface)] p-4 font-mono text-sm text-[var(--ink)] focus-visible:outline-none"
@@ -146,10 +134,10 @@ export default function ChatPage() {
           </span>
           <button
             type="submit"
-            disabled={!canSubmit || isLoading}
+            disabled={!canSubmit}
             className="btn btn-primary text-sm disabled:opacity-40"
           >
-            {isLoading ? "Thinking..." : "Send"}
+            Send
           </button>
         </div>
       </form>
