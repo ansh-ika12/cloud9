@@ -23,6 +23,7 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   const isOverLimit = input.length > CHAR_LIMIT;
   const canSubmit = input.trim().length >= 10 && !isOverLimit && !isLoading;
@@ -45,7 +46,11 @@ export default function ChatPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode, message: userMessage.content }),
+        body: JSON.stringify({
+          mode,
+          message: userMessage.content,
+          conversationId,
+        }),
       });
 
       if (!res.ok) {
@@ -54,6 +59,14 @@ export default function ChatPage() {
       }
 
       const data = await res.json();
+
+      // First message of a new chat: the API creates a conversation row
+      // and hands back its id. Store it so every later message in this
+      // session attaches to the same conversation instead of creating a
+      // new one each time.
+      if (data.conversationId && !conversationId) {
+        setConversationId(data.conversationId);
+      }
 
       const mentorMessage: Message = {
         id: crypto.randomUUID(),
@@ -81,8 +94,6 @@ export default function ChatPage() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    // Enter sends; Shift+Enter inserts a newline (native textarea
-    // behavior) instead of submitting.
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();

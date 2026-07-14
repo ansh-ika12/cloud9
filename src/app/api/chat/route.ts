@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMentorResponse } from "@/lib/generate";
 import type { MentorMode } from "@/prompts/mentorPrompt";
+import { createClient } from "@/lib/supabase-server";
 
 const VALID_MODES: MentorMode[] = ["debug", "explain", "practice"];
+
+function makeTitle(message: string): string {
+  const trimmed = message.trim().replace(/\s+/g, " ");
+  return trimmed.length > 60 ? trimmed.slice(0, 57) + "..." : trimmed;
+}
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { mode, message } = body;
+    const { mode, message, conversationId } = body;
 
     if (!message || typeof message !== "string" || !message.trim()) {
       return NextResponse.json(
@@ -23,9 +29,58 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+    }
+
     const result = await getMentorResponse(mode as MentorMode, message);
 
-    return NextResponse.json(result);
+    // Reuse the conversation id the client already has, or create a new
+    // row on the first message of a fresh chat.
+    let activeConversationId = conversationId as string | undefined;
+
+    if (!activeConversationId) {
+      const { data: newConversation, error: convError } = await supabase
+        .from("conversations")
+        .insert({ user_id: user.id, mode, title: makeTitle(message) })
+        .select("id")
+        .single();
+
+      if (convError || !newConversation) {
+        throw convError ?? new Error("Failed to create conversation");
+      }
+
+      activeConversationId = newConversation.id;
+    }
+
+    // Save both sides of the exchange. The messages_touch_conversation
+    // trigger (supabase/migrations/001_create_tables.sql) bumps
+    // conversations.updated_at automatically on each insert, which is
+    // what keeps the sidebar sorted by most-recent activity.
+    const { error: messagesError } = await supabase.from("messages").insert([
+      {
+        conversation_id: activeConversationId,
+        role: "user",
+        content: message,
+      },
+      {
+        conversation_id: activeConversationId,
+        role: "mentor",
+        content: result.response,
+      },
+    ]);
+
+    if (messagesError) throw messagesError;
+
+    return NextResponse.json({
+      ...result,
+      conversationId: activeConversationId,
+    });
   } catch (err) {
     console.error("Error in /api/chat:", err);
     return NextResponse.json(
