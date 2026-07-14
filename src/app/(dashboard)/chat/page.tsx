@@ -22,12 +22,13 @@ export default function ChatPage() {
   const [mode, setMode] = useState<ModeId>("debug");
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const isOverLimit = input.length > CHAR_LIMIT;
-  const canSubmit = input.trim().length >= 10 && !isOverLimit;
+  const canSubmit = input.trim().length >= 10 && !isOverLimit && !isLoading;
   const activeModeCardClass = MODES.find((m) => m.id === mode)?.cardClass;
 
-  function sendMessage() {
+  async function sendMessage() {
     if (!canSubmit) return;
 
     const userMessage: Message = {
@@ -36,17 +37,42 @@ export default function ChatPage() {
       content: input,
     };
 
-    // Placeholder reply — src/app/api/mentor/* isn't built yet, so this
-    // just proves the chat UI works end-to-end until that's wired up.
-    const mentorMessage: Message = {
-      id: crypto.randomUUID(),
-      role: "mentor",
-      content:
-        "The mentor API isn't connected yet — this is a placeholder response so you can see the chat flow working.",
-    };
-
-    setMessages((prev) => [...prev, userMessage, mentorMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode, message: userMessage.content }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || "Request failed");
+      }
+
+      const data = await res.json();
+
+      const mentorMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "mentor",
+        content: data.response,
+      };
+
+      setMessages((prev) => [...prev, mentorMessage]);
+    } catch (err) {
+      const errorMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "mentor",
+        content:
+          "Sorry, something went wrong reaching the mentor. Please try again.",
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -114,6 +140,18 @@ export default function ChatPage() {
             )
           )
         )}
+        {isLoading && (
+          <div className={`card-sticky ${activeModeCardClass} mr-auto max-w-[80%]`}>
+            <div className="window-chrome">
+              <span className="window-chrome__dot" />
+              <span className="window-chrome__dot" />
+              <span className="window-chrome__dot" />
+            </div>
+            <p className="p-4 text-sm leading-relaxed text-[var(--ink-muted)]">
+              Thinking…
+            </p>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="mt-6">
@@ -137,7 +175,7 @@ export default function ChatPage() {
             disabled={!canSubmit}
             className="btn btn-primary text-sm disabled:opacity-40"
           >
-            Send
+            {isLoading ? "Thinking..." : "Send"}
           </button>
         </div>
       </form>
