@@ -62,24 +62,32 @@ export async function POST(req: NextRequest) {
     // trigger (supabase/migrations/001_create_tables.sql) bumps
     // conversations.updated_at automatically on each insert, which is
     // what keeps the sidebar sorted by most-recent activity.
-    const { error: messagesError } = await supabase.from("messages").insert([
-      {
-        conversation_id: activeConversationId,
-        role: "user",
-        content: message,
-      },
-      {
-        conversation_id: activeConversationId,
-        role: "mentor",
-        content: result.response,
-      },
-    ]);
+   const { data: insertedMessages, error: messagesError } = await supabase
+      .from("messages")
+      .insert([
+        {
+          conversation_id: activeConversationId,
+          role: "user",
+          content: message,
+        },
+        {
+          conversation_id: activeConversationId,
+          role: "mentor",
+          content: result.response,
+        },
+      ])
+      .select("id, role");
 
     if (messagesError) throw messagesError;
+
+    const mentorMessageId = insertedMessages?.find(
+      (m) => m.role === "mentor"
+    )?.id;
 
     return NextResponse.json({
       ...result,
       conversationId: activeConversationId,
+      messageId: mentorMessageId,
     });
   } catch (err) {
     console.error("Error in /api/chat:", err);

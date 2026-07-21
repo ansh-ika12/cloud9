@@ -13,10 +13,13 @@ const MODES: { id: ModeId; label: string; cardClass: string }[] = [
 
 const CHAR_LIMIT = 5000;
 
+import FeedbackButtons from "@/components/chat/FeedbackButtons";
+
 type Message = {
   id: string;
   role: "user" | "mentor";
   content: string;
+  isError?: boolean;
 };
 
 /**
@@ -99,7 +102,7 @@ export default function ConversationPage() {
       const data = await res.json();
 
       const mentorMessage: Message = {
-        id: crypto.randomUUID(),
+        id: data.messageId ?? crypto.randomUUID(),
         role: "mentor",
         content: data.response,
       };
@@ -111,6 +114,7 @@ export default function ConversationPage() {
         role: "mentor",
         content:
           "Sorry, something went wrong reaching the mentor. Please try again.",
+        isError: true,
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -182,9 +186,14 @@ export default function ConversationPage() {
                 <span className="window-chrome__dot" />
                 <span className="window-chrome__dot" />
               </div>
-              <p className="p-4 text-sm leading-relaxed text-[var(--ink)]">
+            <p className="p-4 text-sm leading-relaxed text-[var(--ink)]">
                 {message.content}
               </p>
+              {!message.isError && (
+                <div className="border-t border-[var(--ink)]/10 px-4 py-2">
+                  <FeedbackButtons messageId={message.id} />
+                </div>
+              )}
             </div>
           )
         )}
