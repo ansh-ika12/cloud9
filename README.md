@@ -73,7 +73,6 @@ The application follows a mentor-style teaching approach, encouraging users to d
 
 ## Frontend
 - Next.js 14
-- React
 - TypeScript
 - Tailwind CSS
 
@@ -99,7 +98,7 @@ The application follows a mentor-style teaching approach, encouraging users to d
 - Supabase Storage
 
 ## Deployment
-- Vercel
+- AWS
 
 ---
 
@@ -140,9 +139,8 @@ knowledge-base/
 
 Paste your code and receive:
 - Bug identification
-- Error explanation
-- Guided hints
-- Best practices
+- Logic explanation
+- Code practices
 
 ---
 
