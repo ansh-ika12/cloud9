@@ -6,11 +6,14 @@ export interface RetrievedChunk {
   source: string;
   score: number;
 }
-
+export interface RetrievalResult {
+  chunks: RetrievedChunk[];
+  hasStrongMatch: boolean;
+}
 export async function retrieveContext(
   query: string,
   topK = 4
-): Promise<RetrievedChunk[]> {
+):  Promise<RetrievalResult> {
   const index = getIndex();
 
   // "RETRIEVAL_QUERY" because this is a search question, not a document being indexed
@@ -22,9 +25,16 @@ export async function retrieveContext(
     includeMetadata: true,
   });
 
-  return results.matches.map((match) => ({
+const chunks = results.matches
+  .filter((match) => (match.score ?? 0) >= 0.5)
+  .map((match) => ({
     text: match.metadata?.text as string,
     source: match.metadata?.source as string,
     score: match.score ?? 0,
   }));
+
+return {
+  chunks,
+  hasStrongMatch: chunks.length > 0,
+};
 }
