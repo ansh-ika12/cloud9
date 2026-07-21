@@ -25,13 +25,14 @@ const MODE_INSTRUCTIONS: Record<MentorMode, string> = {
 export function buildMentorPrompt(
   mode: MentorMode,
   userInput: string,
-  context: ContextChunk[]
+  context: ContextChunk[],
+  hasStrongMatch: boolean
 ): string {
-  const contextBlock = context.length
-    ? context
-        .map((c, i) => `[${i + 1}] (source: ${c.source})\n${c.text}`)
-        .join("\n\n")
-    : "No directly relevant knowledge base entries were found. Rely on general programming knowledge.";
+  const contextBlock = hasStrongMatch
+  ? context
+      .map((c, i) => `[${i + 1}] (source: ${c.source})\n${c.text}`)
+      .join("\n\n")
+  : "No strong knowledge-base match found. Use your general programming knowledge while mentioning that no relevant documentation was found.";
 
   return `You are Cloud9, a friendly and encouraging AI coding mentor. Your core rule, above everything else: you help students learn by guiding them, not by solving problems for them. Never give a complete solution or fixed code unless the student has already received hints and explicitly asks for the answer.
 
