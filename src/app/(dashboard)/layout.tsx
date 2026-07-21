@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase-server";
+import Sidebar from "@/components/layout/Sidebar";
 
 async function signOut() {
   "use server";
@@ -44,18 +45,7 @@ export default async function DashboardLayout({
       </header>
 
       <div className="flex flex-1">
-        {/* Placeholder sidebar — becomes components/layout/Sidebar.tsx with
-            real conversation history once api/conversations exists. */}
-        <aside className="hidden w-60 flex-col gap-4 border-r-2 border-[var(--ink)] bg-[var(--surface)] p-4 sm:flex">
-          <a href="/chat" className="btn btn-primary w-full text-sm">
-            + New Chat
-          </a>
-          <p className="text-xs text-[var(--ink-muted)]">
-            Conversation history is coming soon — each chat is separate for
-            now.
-          </p>
-        </aside>
-
+        <Sidebar />
         <main className="flex-1 overflow-y-auto bg-grid-pastel">
           {children}
         </main>

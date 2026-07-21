@@ -12,22 +12,27 @@ const MODES: { id: ModeId; label: string; cardClass: string }[] = [
 
 const CHAR_LIMIT = 5000;
 
+import FeedbackButtons from "@/components/chat/FeedbackButtons";
+
 type Message = {
   id: string;
   role: "user" | "mentor";
   content: string;
+  isError?: boolean;
 };
 
 export default function ChatPage() {
   const [mode, setMode] = useState<ModeId>("debug");
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   const isOverLimit = input.length > CHAR_LIMIT;
-  const canSubmit = input.trim().length >= 10 && !isOverLimit;
+  const canSubmit = input.trim().length >= 10 && !isOverLimit && !isLoading;
   const activeModeCardClass = MODES.find((m) => m.id === mode)?.cardClass;
 
-  function sendMessage() {
+  async function sendMessage() {
     if (!canSubmit) return;
 
     const userMessage: Message = {
@@ -36,17 +41,55 @@ export default function ChatPage() {
       content: input,
     };
 
-    // Placeholder reply — src/app/api/mentor/* isn't built yet, so this
-    // just proves the chat UI works end-to-end until that's wired up.
-    const mentorMessage: Message = {
-      id: crypto.randomUUID(),
-      role: "mentor",
-      content:
-        "The mentor API isn't connected yet — this is a placeholder response so you can see the chat flow working.",
-    };
-
-    setMessages((prev) => [...prev, userMessage, mentorMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode,
+          message: userMessage.content,
+          conversationId,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || "Request failed");
+      }
+
+      const data = await res.json();
+
+      // First message of a new chat: the API creates a conversation row
+      // and hands back its id. Store it so every later message in this
+      // session attaches to the same conversation instead of creating a
+      // new one each time.
+      if (data.conversationId && !conversationId) {
+        setConversationId(data.conversationId);
+      }
+
+      const mentorMessage: Message = {
+        id: data.messageId ?? crypto.randomUUID(),
+        role: "mentor",
+        content: data.response,
+      };
+
+      setMessages((prev) => [...prev, mentorMessage]);
+    } catch (err) {
+      const errorMessage: Message = {
+        id: crypto.randomUUID(),
+        role: "mentor",
+        content:
+          "Sorry, something went wrong reaching the mentor. Please try again.",
+        isError: true,
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -55,8 +98,6 @@ export default function ChatPage() {
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    // Enter sends; Shift+Enter inserts a newline (native textarea
-    // behavior) instead of submitting.
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -107,12 +148,29 @@ export default function ChatPage() {
                   <span className="window-chrome__dot" />
                   <span className="window-chrome__dot" />
                 </div>
-                <p className="p-4 text-sm leading-relaxed text-[var(--ink)]">
+               <p className="p-4 text-sm leading-relaxed text-[var(--ink)]">
                   {message.content}
                 </p>
+                {!message.isError && (
+                  <div className="border-t border-[var(--ink)]/10 px-4 py-2">
+                    <FeedbackButtons messageId={message.id} />
+                  </div>
+                )}
               </div>
             )
           )
+        )}
+        {isLoading && (
+          <div className={`card-sticky ${activeModeCardClass} mr-auto max-w-[80%]`}>
+            <div className="window-chrome">
+              <span className="window-chrome__dot" />
+              <span className="window-chrome__dot" />
+              <span className="window-chrome__dot" />
+            </div>
+            <p className="p-4 text-sm leading-relaxed text-[var(--ink-muted)]">
+              Thinking…
+            </p>
+          </div>
         )}
       </div>
 
@@ -137,7 +195,7 @@ export default function ChatPage() {
             disabled={!canSubmit}
             className="btn btn-primary text-sm disabled:opacity-40"
           >
-            Send
+            {isLoading ? "Thinking..." : "Send"}
           </button>
         </div>
       </form>

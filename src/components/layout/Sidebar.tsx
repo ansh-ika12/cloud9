@@ -2,55 +2,54 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useConversations } from "@/hooks/useConversations";
 
-type ConversationMode = "debug" | "explain" | "practice";
-
-type Conversation = {
-  id: string;
-  title: string;
-  mode: ConversationMode;
-  relativeDate: string;
-};
-
-// Placeholder data — real list loads from api/conversations via the
-// useConversations hook once both exist. Standing in so the sidebar has
-// something to show.
-const MOCK_CONVERSATIONS: Conversation[] = [
-  {
-    id: "1",
-    title: "Fix null pointer in loop",
-    mode: "debug",
-    relativeDate: "2h ago",
-  },
-  {
-    id: "2",
-    title: "Explain closures",
-    mode: "explain",
-    relativeDate: "Yesterday",
-  },
-  {
-    id: "3",
-    title: "Binary search practice",
-    mode: "practice",
-    relativeDate: "3d ago",
-  },
-];
-
-const MODE_BADGE_CLASS: Record<ConversationMode, string> = {
+const MODE_BADGE_CLASS: Record<string, string> = {
   debug: "bg-[var(--bg-pink)]",
   explain: "bg-[var(--bg-blue)]",
   practice: "bg-[var(--bg-mint)]",
 };
 
-function SidebarContent({ activeId }: { activeId?: string }) {
+function formatRelativeDate(iso: string): string {
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return "Just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay === 1) return "Yesterday";
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+function SidebarContent() {
+  const pathname = usePathname();
+  const activeId = pathname.startsWith("/chat/")
+    ? pathname.split("/chat/")[1]
+    : undefined;
+  const { conversations, isLoading } = useConversations();
+
   return (
     <>
-      <Link href="/chat" className="btn btn-primary w-full text-sm">
+      {/* Plain <a>, not <Link> — forces a full reload so chat state resets
+          even when already sitting on /chat (Link skips navigation
+          entirely when the target URL matches the current one). */}
+      <a href="/chat" className="btn btn-primary w-full text-sm">
         + New Chat
-      </Link>
+      </a>
 
       <nav className="mt-4 flex-1 space-y-2 overflow-y-auto">
-        {MOCK_CONVERSATIONS.map((conversation) => {
+        {isLoading && (
+          <p className="text-xs text-[var(--ink-muted)]">Loading…</p>
+        )}
+        {!isLoading && conversations.length === 0 && (
+          <p className="text-xs text-[var(--ink-muted)]">
+            No conversations yet — start one above.
+          </p>
+        )}
+        {conversations.map((conversation) => {
           const isActive = conversation.id === activeId;
           return (
             <Link
@@ -72,18 +71,13 @@ function SidebarContent({ activeId }: { activeId?: string }) {
                   {conversation.mode}
                 </span>
                 <span className="text-xs text-[var(--ink-muted)]">
-                  {conversation.relativeDate}
+                  {formatRelativeDate(conversation.updatedAt)}
                 </span>
               </div>
             </Link>
           );
         })}
       </nav>
-
-      <p className="mt-2 text-xs text-[var(--ink-muted)]">
-        Showing placeholder conversations — real history loads once
-        api/conversations is connected.
-      </p>
     </>
   );
 }
@@ -93,18 +87,22 @@ function SidebarContent({ activeId }: { activeId?: string }) {
  * list, each row showing title + mode badge + relative date. Active
  * conversation gets the sticky-note shadow. Collapses to a
  * hamburger-triggered drawer below md (768px), per FRD §8.
+ *
+ * Now backed by real data via useConversations() (GET /api/conversations)
+ * instead of the mock array this used to render. Active conversation is
+ * derived from the URL via usePathname() rather than a prop, since the
+ * (dashboard) layout that renders this sidebar sits above both /chat and
+ * /chat/[id] and can't see the [id] param directly.
  */
-export default function Sidebar({ activeId }: { activeId?: string }) {
+export default function Sidebar() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   return (
     <>
-      {/* Desktop: static sidebar */}
       <aside className="hidden w-64 flex-col border-r-2 border-[var(--ink)] bg-[var(--surface)] p-4 md:flex">
-        <SidebarContent activeId={activeId} />
+        <SidebarContent />
       </aside>
 
-      {/* Mobile: hamburger trigger */}
       <button
         type="button"
         onClick={() => setIsDrawerOpen(true)}
@@ -114,7 +112,6 @@ export default function Sidebar({ activeId }: { activeId?: string }) {
         ☰
       </button>
 
-      {/* Mobile: slide-over drawer */}
       {isDrawerOpen && (
         <div className="fixed inset-0 z-30 md:hidden">
           <div
@@ -136,7 +133,7 @@ export default function Sidebar({ activeId }: { activeId?: string }) {
                 ✕
               </button>
             </div>
-            <SidebarContent activeId={activeId} />
+            <SidebarContent />
           </aside>
         </div>
       )}
