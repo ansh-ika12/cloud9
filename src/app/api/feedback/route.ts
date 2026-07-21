@@ -16,9 +16,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const { message_id, rating } = await req.json();
+   const { messageId, rating } = await req.json();
 
-    if (!message_id || !rating) {
+    if (!messageId || !rating) {
       return NextResponse.json(
         { error: "Missing required fields." },
         { status: 400 }
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const { data, error } = await supabase
       .from("feedback")
       .insert({
-        message_id,
+        message_id: messageId,
         user_id: user.id,
         rating,
       })
