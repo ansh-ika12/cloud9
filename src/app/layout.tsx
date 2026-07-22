@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Rubik_Bubbles, Space_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
+import AuthProvider from "@/components/providers/AuthProvider";
 
 const rubikBubbles = Rubik_Bubbles({
   subsets: ["latin"],
@@ -40,7 +41,7 @@ export default function RootLayout({
       className={`${rubikBubbles.variable} ${spaceGrotesk.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-body text-[var(--ink)] bg-[var(--surface-alt)]">
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

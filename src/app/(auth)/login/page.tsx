@@ -9,9 +9,10 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [keepLoggedIn, setKeepLoggedIn] = useState(true);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,6 +42,19 @@ export default function LoginPage() {
         setError(signInError.message || "Something went wrong signing in. Try again.");
       }
       return;
+    }
+
+    // "Keep me logged in" — see AuthProvider.tsx for the enforcement side.
+    // sessionStorage clears when the browser is actually closed (a native
+    // guarantee), unlike Supabase's own session cookie, which can persist
+    // far longer by default. Combining the two lets us tell "same browser
+    // session, just refreshed" apart from "closed and reopened."
+    if (keepLoggedIn) {
+      localStorage.removeItem("cloud9-remember-me");
+      sessionStorage.removeItem("cloud9-session-active");
+    } else {
+      localStorage.setItem("cloud9-remember-me", "false");
+      sessionStorage.setItem("cloud9-session-active", "1");
     }
 
     router.push("/chat");
@@ -115,6 +129,16 @@ export default function LoginPage() {
             placeholder="••••••••"
           />
         </div>
+
+        <label className="flex items-center gap-2 text-sm text-[var(--ink)]">
+          <input
+            type="checkbox"
+            checked={keepLoggedIn}
+            onChange={(e) => setKeepLoggedIn(e.target.checked)}
+            className="h-4 w-4 rounded border-2 border-[var(--ink)] accent-[var(--ink)]"
+          />
+          Keep me logged in
+        </label>
 
         <button
           type="submit"
