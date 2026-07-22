@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import MentorMarkdown from "@/components/chat/MentorMarkdown";
 
 type ModeId = "debug" | "explain" | "practice";
 
@@ -148,9 +149,9 @@ export default function ChatPage() {
                   <span className="window-chrome__dot" />
                   <span className="window-chrome__dot" />
                 </div>
-               <p className="p-4 text-sm leading-relaxed text-[var(--ink)]">
-                  {message.content}
-                </p>
+               <div className="p-4">
+                  <MentorMarkdown content={message.content} />
+                </div>
                 {!message.isError && (
                   <div className="border-t border-[var(--ink)]/10 px-4 py-2">
                     <FeedbackButtons messageId={message.id} />
