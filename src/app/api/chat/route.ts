@@ -40,8 +40,6 @@ export async function POST(req: NextRequest) {
 
     const result = await getMentorResponse(mode as MentorMode, message);
 
-    // Reuse the conversation id the client already has, or create a new
-    // row on the first message of a fresh chat.
     let activeConversationId = conversationId as string | undefined;
 
     if (!activeConversationId) {
@@ -58,11 +56,7 @@ export async function POST(req: NextRequest) {
       activeConversationId = newConversation.id;
     }
 
-    // Save both sides of the exchange. The messages_touch_conversation
-    // trigger (supabase/migrations/001_create_tables.sql) bumps
-    // conversations.updated_at automatically on each insert, which is
-    // what keeps the sidebar sorted by most-recent activity.
-   const { data: insertedMessages, error: messagesError } = await supabase
+    const { data: insertedMessages, error: messagesError } = await supabase
       .from("messages")
       .insert([
         {
